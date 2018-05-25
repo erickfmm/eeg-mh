@@ -51,10 +51,10 @@ if __name__ == '__main__':
 		the_data, imf_sizes_eemd = getComponents.getMaxComponentsEMDVariants(the_data, clean_signals[iClean], getComponents.getEEMD)
 		print("ceemdan")
 		the_data, imf_sizes_ceemdan = getComponents.getMaxComponentsEMDVariants(the_data, clean_signals[iClean], getComponents.getCEEMDAN)
-	names.extend(["exact"] * imf_sizes_exact)
-	names.extend(["emd"] * imf_sizes_emd)
-	names.extend(["eemd"] * imf_sizes_eemd)
-	names.extend(["ceemdan"] * imf_sizes_ceemdan)
+	names.extend(["exact"] * int(np.min(imf_sizes_exact)))
+	names.extend(["emd"] * int(np.min(imf_sizes_emd)))
+	names.extend(["eemd"] * int(np.min(imf_sizes_eemd)))
+	names.extend(["ceemdan"] * int(np.min(imf_sizes_ceemdan)))
 	names_clean = []
 	for iClean in range(len(clean_signals)):
 		for iNames in range(len(names)):
@@ -66,7 +66,7 @@ if __name__ == '__main__':
 	extractFeatures.getEnergies(inputs, the_data)
 	print("a obtener sample entropy")
 	extractFeatures.getSampleEntropies(inputs, the_data, 128, 2, 0.15, 1)
-	names = names * 2
+	#names = names * 2
 	names_feat = []
 	for iNames in range(len(names)):
 		names_feat.append(str(names[iNames])+"_energy")

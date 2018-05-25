@@ -69,7 +69,7 @@ def process_all(data, folderToSearch):
 			if file.lower().endswith('.dat'):
 				process_file(root, file, ifile,data)
 				ifile = ifile + 1
-				if ifile >= 2:
+				if ifile >= 1:
 					return data
 				#print(data)
 	return data
