@@ -11,8 +11,10 @@ import pickle
 import numpy as np
 import asyncio
 import sys
+import Bat.MHBat as metaheurBat
 
-if __name__ == '__main__':
+
+def getFeatures():
 	print("to read files")
 	datas = getDeap.getDataDeap('./data_preprocessed_python/')
 	print("files readed, len: "+str(len(datas)))
@@ -81,6 +83,7 @@ if __name__ == '__main__':
 		featsFile.write(str(inputs))
 	with open("outputs.txt", "w") as outsFile:
 		outsFile.write(str(outputs))
+	return inputs, outputs
 	#the_data, imf_sizes = getComponents.getMaxComponentsEMDVariants(the_data, segment_exact_indexed_signals, getComponents.getEMDs)
 	#the_data, imf_sizes2 = getComponents.getMaxComponentsEMDVariants(the_data, segment_exact_indexed_signals, getComponents.getEEMD)
 	#print(the_data[0])
@@ -131,24 +134,28 @@ if __name__ == '__main__':
 		#outputs.append(data['tag'])
 		#outputs.append(int(np.random.uniform(5)))
 		#i += 1
-	print("inputs len: "+str(len(inputs)))
-	print("inputs[0] len: "+str(len(inputs[0])))
-	print("outputs len: "+str(len(outputs)))
+	#print("inputs len: "+str(len(inputs)))
+	#print("inputs[0] len: "+str(len(inputs[0])))
+	#print("outputs len: "+str(len(outputs)))
 	
-	print("to learn")
+	#print("to learn")
 	#optimization.all_combinations_of_features(inputs, outputs, classification.svm_rbf)
 
-	loop = asyncio.get_event_loop()
+	#loop = asyncio.get_event_loop()
 
 	
-	try:
-		for i_c in range(-10, 10):
-			loop.run_until_complete(training.mifun_train(i_c, inputs, outputs, 'rbf'))
-	finally:
-		loop.close()
-	print("bai bai")
+	#try:
+	#	for i_c in range(-10, 10):
+	#		loop.run_until_complete(training.mifun_train(i_c, inputs, outputs, 'rbf'))
+	#finally:
+	#	loop.close()
+	#print("bai bai")
 	
 	# Save to file in the current working directory
 	#pkl_filename = "pickle_model.pkl"  
 	#with open(pkl_filename, 'wb') as file:  
 	#    pickle.dump(model, file)
+
+if __name__ == '__main__':
+	inputs, outputs = getFeatures()
+	metaheurBat.run(inputs, outputs)
