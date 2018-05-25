@@ -33,7 +33,7 @@ def newRandomBat():
 	while True:
 		position = []
 		velocity = []
-		for i in range(MHFeatureConfig.DIMENSION):
+		for i in range(len(inputs[0])):
 			position.append(Distribution.uniform(0, 2))
 			velocity.append(position[i])
 		newBat.setVelocity(velocity)
@@ -89,13 +89,13 @@ def changeLocationBat():
 				velocity = batInSwarm.getVelocity()
 
 				if Distribution.uniform() > batInSwarm.getRadio():
-					for i in range(MHFeatureConfig.DIMENSION):
+					for i in range(len(inputs[0])):
 						position[i] = BinarizationStrategy.toBinary(position[i] + MHBatConfig.EPSILON * averageLoundness())
 
 				beta = Distribution.uniform()
 				if Distribution.uniform() < batInSwarm.getLoundness() and batInSwarm.getFitness() < bestBat.getFitness():
 					batInSwarm.setFrecuency(MHBatConfig.QMIN + (MHBatConfig.QMAX - MHBatConfig.QMIN) * beta)
-					for i in range(MHFeatureConfig.DIMENSION):
+					for i in range(len(inputs[0])):
 						velocity[i] = velocity[i] + ((bestBat.getPosition()[i] - position[i]) * batInSwarm.getFrecuency())
 						position[i] = BinarizationStrategy.toBinary(position[i] + velocity[i])
 					batInSwarm.setVelocity(velocity)
@@ -110,9 +110,9 @@ def run(inputs, outputs):
 	inputs = inputs
 	outputs = outputs
 	initialBatPopulation()
-    while (t < MHBatConfig.T):
-        randomWalk()
-        chooseBestBat()
-        changeLocationBat()
-        t += 1
-    showResults()
+	while (t < MHBatConfig.T):
+		randomWalk()
+		chooseBestBat()
+		changeLocationBat()
+		t += 1
+	showResults()
