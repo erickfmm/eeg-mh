@@ -1,8 +1,8 @@
 import numpy as np
 import Bat.MHBatConfig as MHBatConfig
-import Bat.MHBatSolution as MHBatSolution
+from Bat.MHBatSolution import MHBatSolution
 import Bat.MHFeatureConfig as MHFeatureConfig
-import Bat.Distribution as Distribution
+from Bat.Distribution import Distribution
 import Bat.BinarizationStrategy as BinarizationStrategy
 
 swarm = None
