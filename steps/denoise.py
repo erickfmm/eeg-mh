@@ -29,30 +29,42 @@ def pre_emphasis(signal, alpha):
 
 def butter_all_frames(signals, lowcut, highcut, fs, order=4):
 	print("butter: ", end="")
+	newSignals = []
 	for iData in range(len(signals)):
 		print(iData, end=" ")
+		newSignals.append([])
 		for iChannel in range(len(signals[iData])):
+			newSignals[iData].append([])
 			for iFrame in range(len(signals[iData][iChannel])):
 				#frame = signals[iData][iChannel][iFrame]
-				signals[iData][iChannel][iFrame] = butter_bandpass_filter(signals[iData][iChannel][iFrame], lowcut, highcut, fs, order)
-	return signals
+				newSignals[iData][iChannel].append([])
+				newSignals[iData][iChannel][iFrame] = butter_bandpass_filter(signals[iData][iChannel][iFrame], lowcut, highcut, fs, order)
+	return newSignals
 
 def wavelet_all_frames(signals, type_wavelet='db5'):
 	print("wavelet: ", end="")
+	newSignals = []
 	for iData in range(len(signals)):
 		print(iData, end=" ")
+		newSignals.append([])
 		for iChannel in range(len(signals[iData])):
+			newSignals[iData].append([])
 			for iFrame in range(len(signals[iData][iChannel])):
 				#frame = signals[iData][iChannel][iFrame]
-				signals[iData][iChannel][iFrame] = denoise_wavelet(signals[iData][iChannel][iFrame], type_wavelet)
+				newSignals[iData][iChannel].append([])
+				newSignals[iData][iChannel][iFrame] = denoise_wavelet(signals[iData][iChannel][iFrame], type_wavelet)
 	print()
-	return signals
+	return newSignals
 
 def preemphasis_all_frames(signals, alpha):
+	newSignals = []
 	for iData in range(len(signals)):
-		print(iData)
+		print([iData])
+		newSignals.append([])
 		for iChannel in range(len(signals[iData])):
+			newSignals[iData].append([])
 			for iFrame in range(len(signals[iData][iChannel])):
 				#frame = signals[iData][iChannel][iFrame]
-				signals[iData][iChannel][iFrame] = pre_emphasis(signals[iData][iChannel][iFrame], alpha)
-	return signals
+				newSignals[iData][iChannel].append([])
+				newSignals[iData][iChannel][iFrame] = pre_emphasis(signals[iData][iChannel][iFrame], alpha)
+	return newSignals

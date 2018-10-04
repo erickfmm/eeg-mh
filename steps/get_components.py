@@ -29,8 +29,6 @@ def getMaxComponentsEMDVariants(the_data, signals, Componentfunction):
 	for iData in range(len(signals)):
 		data_imfs = []
 		print(iData, end=" ")
-		if(iData >= 3):
-			break
 		for iChannel in range(len(signals[iData])):
 			for iFrame in range(len(signals[iData][iChannel])):
 				frame = signals[iData][iChannel][iFrame]

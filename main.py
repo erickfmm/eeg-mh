@@ -12,9 +12,12 @@ import numpy as np
 import asyncio
 import sys
 import Bat.MHBat as metaheurBat
+import multiprocessing
+import collections
+import copy
 
 
-def getFeatures():
+def getCleaned():
 	print("to read files")
 	datas = getDeap.getDataDeap('./data_preprocessed_python/')
 	print("files readed, len: "+str(len(datas)))
@@ -23,7 +26,7 @@ def getFeatures():
 	outputs = []
 	i = 1
 	segment_exact_indexed_signals = []
-	clean_signals = []
+	#clean_signals = []
 	the_data = []
 	names = []
 	for data in datas:
@@ -32,16 +35,131 @@ def getFeatures():
 		inputs.append([])
 		min_length = 4234
 		max_length = 5386
-		f3 = segmentSignal.get_exact_index_segment(data['data']['f3'], min_length, max_length)
-		c4 = segmentSignal.get_exact_index_segment(data['data']['c4'], min_length, max_length)
-		segment_exact_indexed_signals.append([[f3], [c4]])
+		#f3 = segmentSignal.get_exact_index_segment(data['data']['f3'], min_length, max_length)
+		#c4 = segmentSignal.get_exact_index_segment(data['data']['c4'], min_length, max_length)
+		#segment_exact_indexed_signals.append([[f3], [c4]])
+	pickle.dump(the_data, open("the_data.pkl", "wb"))
+	pickle.dump(outputs, open("outputs.pkl", "wb"))
+	pickle.dump(inputs, open("inputs.pkl", "wb"))
+	#sys.exit()
+	print("te save exact")
+	pickle.dump(segment_exact_indexed_signals, open("segment_exact_indexed_signals.pkl", "wb"))
+	print("to clean")
 	wavelet = denoise.wavelet_all_frames(segment_exact_indexed_signals, 'db5')
 	beta = denoise.butter_all_frames(segment_exact_indexed_signals, 12.5, 30, fs=128, order=4)
+	theta = denoise.butter_all_frames(segment_exact_indexed_signals, 4, 7, fs=128, order=4)
+	beta_opt = denoise.butter_all_frames(segment_exact_indexed_signals, 16, 31, fs=128, order=4)
 	beta1 = denoise.butter_all_frames(segment_exact_indexed_signals, 12.5, 16.0, fs=128, order=4)
 	beta2 = denoise.butter_all_frames(segment_exact_indexed_signals, 16.5, 20, fs=128, order=4)
 	beta3 = denoise.butter_all_frames(segment_exact_indexed_signals, 20.5, 28, fs=128, order=4)
-	alpha = denoise.butter_all_frames(segment_exact_indexed_signals, 8.0, 12.0, fs=128, order=4)
-	clean_signals = [segment_exact_indexed_signals, wavelet, beta, beta1, beta2, beta3, alpha]
+	alpha = denoise.butter_all_frames(segment_exact_indexed_signals, 8.0, 15.0, fs=128, order=4)
+	clean_signals = [segment_exact_indexed_signals, wavelet, beta, beta1, beta2, beta3, alpha, theta, beta_opt]
+	cleaned = {"exact": segment_exact_indexed_signals, "wavelet": wavelet, "beta": beta, "beta1": beta1, "beta2": beta2, "beta3": beta3, "alpha": alpha, "theta": theta, "beta_opt": beta_opt}
+	print("to pickle")
+	pickle.dump(cleaned, open("cleaned.pkl", "wb"))
+	pickle.dump(clean_signals, open("clean_signals.pkl", "wb"))
+	pickle.dump(wavelet, open("wavelet.pkl", "wb"))
+	pickle.dump(beta1, open("beta1.pkl", "wb"))
+	pickle.dump(beta2, open("beta2.pkl", "wb"))
+	pickle.dump(beta3, open("beta3.pkl", "wb"))
+	pickle.dump(beta, open("beta.pkl", "wb"))
+	pickle.dump(alpha, open("alpha.pkl", "wb"))
+	pickle.dump(theta, open("theta.pkl", "wb"))
+	pickle.dump(beta_opt, open("beta_opt.pkl", "wb"))
+	print("aaaaall saved")
+	return clean_signals
+
+def getComps(the_args):
+	the_data =  copy.deepcopy(the_args["the_data"])
+	cleaned = the_args["cleaned"]
+	func = the_args["func"]
+	iClean = the_args["iClean"]
+	namefunc = the_args["namefunc"]
+	names = []
+	#the_data, sizes = getComponents.getMaxComponentsEMDVariants(the_data, cleaned, func)
+	#print(the_data)
+	for iData in range(len(the_data)):
+		the_data[iData].append([1, 2, 4])
+		the_data[iData].append([5, 4, 8])
+	sizes = [1, 2, 67, -4]
+	names.extend([str(iClean)+"_"+namefunc] * int(np.min(sizes)) * 2)
+	return {
+	"data": the_data,
+	"sizes": sizes,
+	"names": names
+	}
+
+def append_the_data(the_data, the_data2):
+	for iData in range(len(the_data)):
+		for iData2 in range(len(the_data2[iData])):
+			the_data[iData].append(the_data2[iData][iData2])
+	return the_data
+
+def procccMult(the_args):
+	iClean = the_args["iClean"]
+	cleaned = the_args["cleaned"]
+	the_data = copy.deepcopy(the_args["the_data"])
+	pool = multiprocessing.Pool()
+	the_args = [{
+	"the_data": the_data,
+	"cleaned": cleaned,
+	"func": getComponents.getExactSignal,
+	"iClean": iClean,
+	"namefunc": "exact",
+	},{
+	"the_data": the_data,
+	"cleaned": cleaned,
+	"func": getComponents.getEMDs,
+	"iClean": iClean,
+	"namefunc": "emd",
+	},{
+	"the_data": the_data,
+	"cleaned": cleaned,
+	"func": getComponents.getEEMD,
+	"iClean": iClean,
+	"namefunc": "eemd",
+	},{
+	"the_data": the_data,
+	"cleaned": cleaned,
+	"func": getComponents.getCEEMDAN,
+	"iClean": iClean,
+	"namefunc": "ceemdan",
+	}]
+	#names = []
+	res = pool.map(getComps, the_args)
+	names = [val for l in res for val in l["names"]]
+	for the_data2 in res:
+		append_the_data(the_data, the_data2["data"])
+	return {"names": names, "data": the_data}
+
+def getFeatsPool():
+	#pool = multiprocessing.Pool()
+	the_data = pickle.load(open("the_data.pkl", "rb"))
+	clean_signals = pickle.load(open("clean_signals.pkl", "rb"))
+	#to_data = []
+	#res = []
+	for iClean in range(len(clean_signals)):
+		my_data = {
+		"iClean": iClean,
+		"cleaned": clean_signals[iClean],
+		"the_data": the_data# copy.deepcopy(the_data)
+		}
+		#to_data.append(my_data)
+		#res.append(procccMult(to_data))
+		the_data = procccMult(my_data)["data"]
+		#append_the_data(the_data, the_data2["data"])
+	#res = pool.map(procccMult, to_data)
+	#for the_data2 in res:
+		#append_the_data(the_data, the_data2["data"])
+	print(the_data)
+
+#def getAlFeats(the_data):
+
+
+def getFeatures():
+	#clean_signals = getCleaned()
+	the_data = pickle.load(open("the_data.pkl", "rb"))
+	clean_signals = pickle.load(open("clean_signals.pkl", "rb"))
 	for iClean in range(len(clean_signals)):
 		print("obteniendo componentes para limpieza: ", end="")
 		print(iClean)
@@ -49,21 +167,23 @@ def getFeatures():
 		the_data, imf_sizes_exact = getComponents.getMaxComponentsEMDVariants(the_data, clean_signals[iClean], getComponents.getExactSignal)
 		print("emd")
 		the_data, imf_sizes_emd = getComponents.getMaxComponentsEMDVariants(the_data, clean_signals[iClean], getComponents.getEMDs)
-		print("eemd")
-		the_data, imf_sizes_eemd = getComponents.getMaxComponentsEMDVariants(the_data, clean_signals[iClean], getComponents.getEEMD)
-		print("ceemdan")
-		the_data, imf_sizes_ceemdan = getComponents.getMaxComponentsEMDVariants(the_data, clean_signals[iClean], getComponents.getCEEMDAN)
-	names.extend(["exact"] * int(np.min(imf_sizes_exact)))
-	names.extend(["emd"] * int(np.min(imf_sizes_emd)))
-	names.extend(["eemd"] * int(np.min(imf_sizes_eemd)))
-	names.extend(["ceemdan"] * int(np.min(imf_sizes_ceemdan)))
-	names_clean = []
-	for iClean in range(len(clean_signals)):
-		for iNames in range(len(names)):
-			names_clean.append(str(iClean)+"_"+str(names[iNames]))
+		#print("eemd")
+		#the_data, imf_sizes_eemd = getComponents.getMaxComponentsEMDVariants(the_data, clean_signals[iClean], getComponents.getEEMD)
+		#print("ceemdan")
+		#the_data, imf_sizes_ceemdan = getComponents.getMaxComponentsEMDVariants(the_data, clean_signals[iClean], getComponents.getCEEMDAN)
+		name_file = "the_data_comps_untilclean_"+str(iClean)+".pkl"
+		pickle.dump(the_data, open(name_file, "wb"))
+		names.extend([str(iClean)+"_"+"exact"] * int(np.min(imf_sizes_exact)) * 2)
+		names.extend([str(iClean)+"_"+"emd"] * int(np.min(imf_sizes_emd)) * 2)
+		#names.extend([str(iClean)+"_"+"eemd"] * int(np.min(imf_sizes_eemd)) * 2)
+		#names.extend([str(iClean)+"_"+"ceemdan"] * int(np.min(imf_sizes_ceemdan)) * 2)
+	#names_clean = []
+	#for iClean in range(len(clean_signals)):
+	#	for iNames in range(len(names)):
+	#		names_clean.append(str(iClean)+"_"+str(names[iNames]))
 	#names = names * iClean
 	
-	names = names_clean
+	#names = names_clean
 	print("a obtener energia")
 	extractFeatures.getEnergies(inputs, the_data)
 	print("a obtener sample entropy")
@@ -157,5 +277,7 @@ def getFeatures():
 	#    pickle.dump(model, file)
 
 if __name__ == '__main__':
-	inputs, outputs = getFeatures()
-	metaheurBat.run(inputs, outputs)
+	getFeatsPool()
+	#getCleaned()
+	#inputs, outputs = getFeatures()
+	#metaheurBat.run(inputs, outputs)

@@ -1,4 +1,5 @@
 output/*
 steps/__pycache__/*
+Bat/__pycache__/*
 data_original/*
 data_preprocessed_python/*
